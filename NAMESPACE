@@ -1,0 +1,11 @@
+exportPattern("^[[:alpha:]]+")
+
+## Lorenz63:
+## Lorenz96:
+export(l96_simulate, l96_ens0)
+## LorenzM2:
+export(lm2_simulate, lm2_ens0)
+## Lorenz all:
+export(lorenz_plot, lorenz_observe, lorenz_as_df, lorenz_run_as_df, lorenz_da_eval, lorenz_plot_eval)
+
+useDynLib("lorenzr")
