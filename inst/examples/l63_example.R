@@ -10,7 +10,6 @@ nsteps <- 10/deltat
 
 state <- x0
 state1 <- l63_integrate(x0, params=params,nsteps=nsteps, deltat=deltat)
-# state1 <- L96.integrate(x0, nsteps, deltat=deltat)
 plot.ts(state1)
 
 
