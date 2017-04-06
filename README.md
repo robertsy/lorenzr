@@ -11,3 +11,5 @@ Implementation of the Lorenz models:
 
 ## Description
 The core implementation is in Fortran95, with R functions provided to interface. Basic examples are given and assimilation algorithms from *assimilr* are tested.
+
+This code was not intended as full-fledged package but rather as a quick developing platform for personal ideas concerning data assimilation algorithms. If you feel like rewriting it as a package with a better design, please contact me and I would be glad to support you if I have some time. 
