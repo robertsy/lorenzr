@@ -1,7 +1,7 @@
 ! Basic Lorenz96 implementation
 
 
-SUBROUTINE l96integrate(state, kens, ndim, forcing, nsteps, deltat, forcingvec)
+SUBROUTINE l96integrate(state, kens, ndim, forcing, nsteps, deltat)
   USE utils
 
   IMPLICIT NONE
@@ -12,7 +12,6 @@ SUBROUTINE l96integrate(state, kens, ndim, forcing, nsteps, deltat, forcingvec)
   REAL(dp)                                    :: forcing     ! forcing parameter (typically 8)
   INTEGER                                     :: nsteps
   REAL(dp)                                    :: deltat      ! increments in time
-  REAL(dp), DIMENSION(ndim)                   :: forcingvec  ! 
 
   !! dummy variables:
   INTEGER                                     :: buff_size=2 ! size of buffer for BC
@@ -47,8 +46,7 @@ SUBROUTINE l96integrate(state, kens, ndim, forcing, nsteps, deltat, forcingvec)
   
   DO i=1,nsteps
     !CALL l96rk(state_a, forcing, ndim, kens, ind, buff_size, deltat, deltax)
-    !CALL l96diff(state_a, forcing, ndim, ind, deltax)
-    CALL l96diffvec(state_a, forcingvec, ndim, ind, deltax)
+    CALL l96diff(state_a, forcing, ndim, ind, deltax)
     state_a(ind,:) = state_a(ind,:) + deltat * deltax 
     CALL ringbc( state_a, buff_size, ndim)
   END DO

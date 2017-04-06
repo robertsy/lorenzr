@@ -29,10 +29,12 @@ i <- 1
 plot.ts(lm2_run$state.ts[i,])
 plot.ts(lm2_run$state.ts[i+1,])
 
+
+
 K <- 20
 ens0 <- lm2_ens0(K, lm2_run)
 
 lorenz_plot(lm2_run$state.ts[1,], lm2_run$y.ts[[1]], ens0)
 
-
+lorenz_heatmap(lm2_run)
 

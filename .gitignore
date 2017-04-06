@@ -6,4 +6,5 @@ lorenzr.Rproj
 .Ruserdata
 src/*.o
 src/*.so
+src/*.mod
 src/*.dll

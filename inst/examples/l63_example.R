@@ -25,18 +25,18 @@ freq <- 1/5
 duration <- 100*freq
 l63_run <- l63_simulate(duration, freq, deltat=deltat, sig = 3)
 
+# lorenz_heatmap(l63_run)
+
+
 ## ensemble:
 ens0 <- l63_ens0(kens, l63_run)
 
 l63_df <- lorenz_as_df(l63_run$state.ts) %>%
-  rename(time=x, variable=ensemble) #%>%
-  # mutate(variable=ifelse(variable=='ens_1', 'x(1)', ifelse(variable=='ens_2', 'x(2)', 'x(3)')))
-
+  rename(time=x, variable=ensemble)
 l63_df$variable <- factor(l63_df$variable, levels = c('ens_1', 'ens_2', 'ens_3'), labels=c('x(1)', 'x(2)', 'x(3)'))
 
 
 l63_y_df <-
-  # lapply( l63_run$y.ts, function(x) data_frame(x=x$y.loc, value=x$y))
   foreach(i=1:length(l63_run$y.ts), .combine='rbind')%do%{
     yy <- l63_run$y.ts[[i]]
     data_frame(variable=paste('x(',yy$y.loc,')',sep=''), value=yy$y, time=i)

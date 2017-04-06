@@ -1,37 +1,65 @@
 ## utils function, useful for both models.
-#
-# PUBLIC:  lorenz_plot, lorenz_heatmap, lorenz_observe, lorenz_as_df, lorenz_run_as_df, lorenz_da_eval, lorenz_plot_eval
-# PRIVATE: msqrt
-
-###################################################
-## PUBLIC:
 
 
 
-
-lorenz_plot <- function(lorenz_state, lorenz_obs, ens=NULL, tit='',ylim,...){
+#' plot state as a line
+#'
+#' @param lorenz_state vector of state
+#' @param lorenz_obs list object with y and y.loc
+#' @param ens ensemble matrix (can be passed as a list for multiple ensembles)
+#' @param tit title of plot
+#' @param ylim passed to plot()
+#' @param xlab passed to plot()
+#' @param ylab passed to plot()
+#' @param ... extra parameters passed to plot()
+lorenz_plot <- function(lorenz_state, lorenz_obs, ens=NULL, tit='', ylim, xlab='site', ylab='state',...){
   yrange <- range(c(lorenz_state, ens, lorenz_obs$y))
   if (!missing(ylim)) yrange <- ylim
-
-  plot(lorenz_state, type='l', ylim=yrange, main=tit, lwd=2,...)
+  plot(lorenz_state, type='l', ylim=yrange, main=tit, lwd=2, xlab=xlab, ylab=ylab,...)
   points(lorenz_obs$y.loc, lorenz_obs$y, col='red', pch=3)
-  for (k in 1:ncol(ens)){
-    lines(ens[,k], col='purple')
+  if (!is.null(ens)){
+    ## plot ensembles successively (with different color)
+    if (!is.list(ens)) ens <- list(ens) ## if only one ensemble, make it a list of length 1
+    colvec <- RColorBrewer::brewer.pal(max(length(ens),3), "Accent")
+    for (ensi in 1:length(ens)){
+      for (k in 1:ncol(ens[[ensi]])){
+        lines(ens[[ensi]][,k], col=colvec[ensi])
+      }
+    }
   }
-  points(lorenz_state, type='l', lwd=2, col='black') ## reprint state over
+  points(lorenz_state, type='l', lwd=1, col='black') ## reprint state over
 }
 
 
 
-lorenz_heatmap <- function(l96_run,...){
-  lorenz_df <- reshape2::melt(l96_run$state.ts, varnames=c('time', 'location'))
+
+#' plot time evolution of the state as a heatmap 
+#' 
+#' @description 
+#' x-axis=sites, y-axis=time, color=state
+#'
+#' @param l_run output of l**_simulate
+#' @param vmean value of state around which to spread the color (e.g. 2.4=climatological mean of lorenz96)
+#' @param ... extra parameters in case (not used)
+lorenz_heatmap <- function(l_run, vmean=2.4, ...){
+  lorenz_df <- reshape2::melt(l_run$state.ts, varnames=c('time', 'location'))
   lorenz_df %>%
     ggplot(aes(x=time, y=location, fill=value)) +
     geom_raster() +
-    scale_fill_gradient2(midpoint = 2.4)## 2.4: climatological mean
+    scale_fill_gradient2(midpoint = vmean) + ## 2.4: climatological mean (for l96)
+    theme_bw()
 }
 
 
+
+
+#' Observation operator
+#' 
+#' @description 
+#' used in l**_simulate to produce observations
+#'
+#' @param state vector of state
+#' @inheritParams l96_simulate
 lorenz_observe <- function(state, sig=sqrt(0.5), ndim, obs_type, R_sig=sig, nobs=ndim/10){
   ## observations parameters:
   H.full <- diag(ndim) #every location is observed
@@ -58,7 +86,10 @@ lorenz_observe <- function(state, sig=sqrt(0.5), ndim, obs_type, R_sig=sig, nobs
 }
 
 
-
+#' Put state in long format
+#' 
+#' @param state state vector
+#' @return tbl object with value and x(=site) as variables
 lorenz_as_df <- function(state){
   ## ensemble or state?
   is_ens <- is.matrix(state)
@@ -86,10 +117,16 @@ lorenz_as_df <- function(state){
 
 
 
-
-## apply lorenz_as_df to a model run (cycled DA)
-## return a nice df object
-## example:
+#' Apply lorenz_as_df to a model run
+#' 
+#' @description 
+#' used to take a model run lists, transform into a data frame that can be used to
+#' evaluate forecasts in lorenz_da_eval
+#' 
+#' @param model_run as returned from a cycling experiment
+#' @param lorenz_run reference run as returned from l**_simulate
+#' @inheritParams  l96_simulate
+#' @return tbl object with time evolution of ensemble and truth
 lorenz_run_as_df <- function(model_run, duration, freq, lorenz_run=NULL){
   time_vec <- seq(0,duration, by=freq)
 
@@ -126,6 +163,16 @@ lorenz_run_as_df <- function(model_run, duration, freq, lorenz_run=NULL){
 
 
 
+
+#' Compute diagnostics of cycling experiment
+#' 
+#' @description 
+#' compute error measures (bias, mse, rmse, crps) per time and 
+#' per ensemble type (analysis, forecast)
+#' 
+#' @param model_run as returned from a cycling experiment
+#' @param lorenz_run reference run as returned from l**_simulate
+#' @return tbl object with bias, mse, rmse, nobs, crps for background/analysis ensembles
 lorenz_da_eval <- function(lorenz_run, model_run){
 
   ## transform to nice df:
@@ -162,15 +209,26 @@ lorenz_da_eval <- function(lorenz_run, model_run){
 }
 
 
+
+
+#' Plot time evolution of errors
+#'
+#' @param ens_eval data frame returned from lorenz_da_eval
 lorenz_plot_eval <- function(ens_eval){
   g <-
     filter(ens_eval, error_type!='nobs') %>%
     ggplot(aes(x=time, y=error, linetype=type, color=method)) + geom_line() + facet_wrap(~error_type, scales = 'free')
+  print(g)
 }
 
 
-###################################################
-## PRIVATE:
+#' Symmetric matrix square root of a positive definite matrix
+#' 
+#' @description 
+#' use eigenvalue decompostion
+#'
+#' @param A a symmetric matrix
+#' @return S such that S'S = A
 msqrt <- function(A){
   if(ncol(A)==1) return(sqrt(A))
   e <- eigen(A)

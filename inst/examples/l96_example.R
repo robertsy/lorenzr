@@ -4,8 +4,10 @@ set.seed(1)
 deltat <- 1/1000
 freq <- 0.4
 duration <- 200*freq
-l96_run <- l96_simulate(duration, freq, ndim=ndim, Forcing=Forcing, deltat=deltat)
-lorenz_plot(l96_run$state.ts[duration/freq+1,], l96_run$y.ts[[duration/freq+1]])
+ndim <- 40
+Forcing <- 8
+l96_run <- l96_simulate(0.1*100, 0.1, ndim=40, Forcing=8, deltat=1/1000)
+lorenz_plot(l96_run$state.ts[101,], l96_run$y.ts[[101]])
 
 ## heatmap:
 lorenz_heatmap(l96_run)
@@ -24,16 +26,6 @@ ens0 <- l96_ens0(K, l96_run)
 
 lorenz_plot(l96_run$state.ts[1,], l96_run$y.ts[[1]], ens0)
 
-
-
-
-
-#
-#   source('~/workspace/COMPLETED/DA/dynamical_models/L96.R')
-
-# x1 <- L96.integrate(x0, nsteps*deltat, deltat)
-#
-#   all.equal(output$state, x1)
 
 
 
